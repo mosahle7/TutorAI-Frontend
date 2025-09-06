@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
-import { ListFiles, SelectFile } from "./Fetcher"
+import { use, useEffect, useState } from "react";
+import { ListFiles, SelectFile, ShowFile, ReadFile } from "./Fetcher"
+import { OptionsIcon } from "./Icons";
 import styled from "styled-components";
 
-export const ListDocs = ({ docs, loading, open, setOpen }) => {
+export const ListDocs = ({ docs, loading, open, setOpen, onSelectDoc }) => {
     // const [docs, setDocs] = useState([]);
     // const [loading, setLoading] = useState(true);
     // const [open, setOpen] = useState(false);
@@ -24,10 +25,36 @@ export const ListDocs = ({ docs, loading, open, setOpen }) => {
     //     fetchDocs();
     // }, []);
 
-    const handleSelectDoc = async (doc) => {
-        await SelectFile({collection_name: doc});
-        console.log("Selected :",doc)
+    // const handleSelectDoc = async (doc) => {
+    //     await SelectFile({collection_name: doc});
+    //     console.log("Selected :",doc)
+    // }
+
+    const [menuDoc, setMenuDoc] = useState(null);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalFileUrl, setModalFileUrl] = useState("")
+
+    const handleIcon = (e, doc) => {
+        e.stopPropagation();
+        setMenuDoc(doc);
+    };
+
+    const handleView = (doc) => {
+        setModalFileUrl(`http://localhost:8001/read_docs/${doc}`);
+        setModalOpen(true);
+        setMenuDoc(null);
     }
+
+    const handleDownload = (doc) => {
+        window.open(`http://localhost:8001/read_docs/${doc}`, '_blank');
+        setMenuDoc(null);
+    }
+
+
+    const closeModal = () => {
+        setModalOpen(false)
+        setModalFileUrl("");
+    };
 
     if (loading) return <p>Loading documents...</p>
     return(
@@ -41,7 +68,16 @@ export const ListDocs = ({ docs, loading, open, setOpen }) => {
                 <>
                     <Docs>Documents</Docs>
                     {docs.map((doc, ind) => (
-                        <File key={ind} onClick={() => handleSelectDoc(doc)}>{doc}</File>
+                        <File key={ind} onClick={() => onSelectDoc(doc)}>
+                            <OptionsIcon onClick= {e => handleIcon(e, doc)}/>
+                            {doc}
+                            {menuDoc === doc && (
+                                <Menu>
+                                    <div onClick={() => handleView(doc)}>View</div>
+                                    <div onClick={() => handleDownload(doc)}>Download</div>
+                                </Menu>
+                            )}
+                        </File>
                     ))}
                 </>
             ):(
@@ -49,18 +85,54 @@ export const ListDocs = ({ docs, loading, open, setOpen }) => {
                
             )}
         </FileList>
+
+        {modalOpen && (
+            <ModalOverlay onClick={closeModal}>
+                <ModalContent onClick={e => e.stopPropagation()}>
+                    <CloseButton onClick={closeModal}>x</CloseButton>
+                    <iframe
+                        src={modalFileUrl}
+                        title="Document Viewer"
+                        width="800"
+                        height="500"
+                    />
+                </ModalContent>
+            </ModalOverlay>
+            
+        )}
         </>
     )
 }
 
-export const showDoc = () => {
+export const ShowDoc = ({ collection_name }) => {
+    const [displayName, setDisplayName] = useState("");
+
+    useEffect(() => {
+        const fetchDoc = async () => {
+            const doc = await ShowFile();
+            setDisplayName(doc);
+        };
+        fetchDoc();
+    }, [collection_name]);
+
     return(
-        <div>
-            
-        </div>
+        <Show>
+            {displayName|| "Loading..."}
+        </Show>
     )
 }
 
+// export const 
+
+const Menu = styled.div`
+`
+
+const Show = styled.div`
+    position: fixed;
+    margin-top: -10px;
+    margin-left: 30px;
+    // z-index: 5000;
+`
 const FileList = styled.div`
     position: fixed;
     display: flex;
@@ -111,3 +183,48 @@ const File = styled.div`
         transition: all 0.2s ease;
     };
 `
+
+const ModalOverlay = styled.div`
+position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const ModalContent = styled.div`
+background: #fff;
+  padding: 25px;
+  border-radius: 10px;
+  position: relative;
+  min-width: 600px;
+  min-height: 400px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+`;
+
+const CloseButton = styled.div`
+  position: absolute;
+  top: 2px; 
+  right: 35px;
+  width: 20px;
+  height: 20px;
+//   background: #f0f0f0;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  font-weight: bold;
+  color: #333;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    // color: #e74c3c;
+    color: red;
+    // color: #fff;
+  }
+`;

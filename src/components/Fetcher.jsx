@@ -75,7 +75,7 @@ export const SelectFile = async ({collection_name}) => {
     }
 }
 
-export const showCollection = async () => {
+export const ShowFile = async () => {
     try{
         const response = await axios.get('http://localhost:8001/show_collection');
         return response.data;
@@ -84,5 +84,15 @@ export const showCollection = async () => {
         console.error("Error showing collection: ",error);
         throw error;
     }
+}
 
+export const ReadFile = async (filename) => {
+    try{
+        const response = await axios.get(`http://localhost:8001/read_docs/${filename}`);
+        return response.data;
+    }
+    catch(error){
+        console.error("Error reading file: ",error);
+        throw error;
+    }
 }

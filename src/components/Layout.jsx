@@ -1,20 +1,22 @@
 import styled from 'styled-components';
 import { useState, useRef, useEffect} from 'react';
-import { getResponse } from './Fetcher';
+import { getResponse, SelectFile } from './Fetcher';
 import { FileUploader } from './FileUploader';
 import ReactMarkdown from 'react-markdown';
 import { ListFiles } from './Fetcher';
-import { ListDocs } from './ListDocs';
+import { ListDocs, ShowDoc } from './ListDocs';
 
 export const Layout = () => {
     const [query, setQuery] = useState('');
     const chatBoxRef = useRef(null);
     const [shiftEnterPressed, setShiftEnterPressed] = useState(false);
     const isMultiline = query.split('\n').length > 1;
+    const [introText, setIntroText] = useState('');
     const [docs, setDocs] = useState([]);
     const [open, setOpen] = useState(false);
     const [loadingDocs, setLoadingDocs] = useState(true);
     const [conversation, setConversation] = useState([]);
+    const [collection_name, setCollectionName] = useState("");
 
     const fetchDocs = async () => {
         try {
@@ -27,14 +29,43 @@ export const Layout = () => {
             setLoadingDocs(false);
         }
         };
+    
+    const handleSelectDoc = async (doc) => {
+        await SelectFile({collection_name: doc});
+        setCollectionName(doc);
+        console.log("Selected :",doc)
+    }
 
     useEffect(() => {
         fetchDocs();
     }, []);
 
-useEffect(() => {
-    if (chatBoxRef.current) {
-        if (isMultiline) {
+    useEffect(() => {
+    if (conversation.length === 0) {
+        const fullText = "Do you have any doubts in your mind?";
+        let i = 0;
+        let current = '';
+        setIntroText(''); // Clear before starting
+
+        const interval = setInterval(() => {
+            if (i < fullText.length) {
+                current += fullText.charAt(i);
+                setIntroText(current);
+                i++;
+            } else {
+                clearInterval(interval);
+            }
+        }, 40);
+
+        return () => clearInterval(interval);
+    } else {
+        setIntroText('');
+    }
+}, [conversation.length]);
+
+    useEffect(() => {
+        if (chatBoxRef.current) {
+            if (isMultiline) {
             chatBoxRef.current.style.height = 'auto';
             chatBoxRef.current.style.height = chatBoxRef.current.scrollHeight + 'px';
         } else {
@@ -127,9 +158,13 @@ useEffect(() => {
             <main>
                 
             </main>
-            <ListDocs docs={docs} loading={loadingDocs} open={open} setOpen={setOpen}/>
+            <ShowDoc collection_name={collection_name}/>
+            <ListDocs docs={docs} loading={loadingDocs} open={open} setOpen={setOpen} onSelectDoc={handleSelectDoc}/>
             {conversation.length === 0 && (
-                <Intro $open={open}>Do you have any doubts in your mind?</Intro>
+                <Intro $open={open}>
+                    {introText}
+                    {introText.length < "Do you have any doubts in your mind?".length &&(<BlinkingCursor>|</BlinkingCursor>)}
+                </Intro>
             )}
 
             <ChatContainer $down={conversation.length > 0} $open={open}>
@@ -195,8 +230,19 @@ const Intro = styled.div`
     font-weight: 400;
     width: 100%;
     transition: padding-left 0.3s ease;
-
 `
+
+const BlinkingCursor = styled.span`
+    display: inline-block;
+    width: 1ch;
+    animation: blink 1s steps(1) infinite;
+
+    @keyframes blink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0; }
+    }
+`;
+
 const ChatContainer = styled.div`
     position: fixed;
     padding-left: ${props => props.$open ? '135px' : '0px'};
