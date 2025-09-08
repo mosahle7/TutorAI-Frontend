@@ -36,7 +36,7 @@ export const ListDocs = ({ docs, loading, open, setOpen, onSelectDoc }) => {
 
     const handleIcon = (e, doc) => {
         e.stopPropagation();
-        setMenuDoc(doc);
+        setMenuDoc(prev => (prev === doc ? null : doc));
     };
 
     const handleView = (doc) => {
@@ -46,9 +46,14 @@ export const ListDocs = ({ docs, loading, open, setOpen, onSelectDoc }) => {
     }
 
     const handleDownload = (doc) => {
-        window.open(`http://localhost:8001/read_docs/${doc}`, '_blank');
+        const link = document.createElement('a');
+        link.href = `http://localhost:8001/download_docs/${doc}`;
+        link.download = doc;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
         setMenuDoc(null);
-    }
+    };
 
 
     const closeModal = () => {
@@ -56,7 +61,25 @@ export const ListDocs = ({ docs, loading, open, setOpen, onSelectDoc }) => {
         setModalFileUrl("");
     };
 
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if(
+                menuDoc &&
+                !e.target.closest(".menu") &&
+                !e.target.closest(".options-icon")
+            ) {
+                setMenuDoc(null);
+            }
+        };
+
+        document.addEventListener("click", handleClickOutside);
+        return () => {
+            document.removeEventListener("click", handleClickOutside);
+        }
+    }, [menuDoc]);
+
     if (loading) return <p>Loading documents...</p>
+
     return(
         <>
         <SideBarButton open={open} onClick = {() => setOpen(!open)}>
@@ -69,10 +92,10 @@ export const ListDocs = ({ docs, loading, open, setOpen, onSelectDoc }) => {
                     <Docs>Documents</Docs>
                     {docs.map((doc, ind) => (
                         <File key={ind} onClick={() => onSelectDoc(doc)}>
-                            <OptionsIcon onClick= {e => handleIcon(e, doc)}/>
+                            <OptionsIcon className="options-icon" onClick= {e => handleIcon(e, doc)}/>
                             {doc}
                             {menuDoc === doc && (
-                                <Menu>
+                                <Menu className="menu">
                                     <div onClick={() => handleView(doc)}>View</div>
                                     <div onClick={() => handleDownload(doc)}>Download</div>
                                 </Menu>
@@ -125,6 +148,22 @@ export const ShowDoc = ({ collection_name }) => {
 // export const 
 
 const Menu = styled.div`
+    position: absolute;
+    left: 170px;
+    top: 40px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    z-index: 10000;
+    min-width: 85px;
+    > div {
+        padding: 6px 2px;
+        font-size: 14px;
+        // color: #333;
+        cursor: pointer;
+        &:hover {background: #f0f0f0; }
+}}
 `
 
 const Show = styled.div`
@@ -169,6 +208,7 @@ const SideBarButton = styled.div`
 `
 const File = styled.div`
     display: flex;
+    position: relative;
     flex-direction: row;
     // margin-bottom: 15px;
     padding-left: 30px;
@@ -207,14 +247,14 @@ background: #fff;
 const CloseButton = styled.div`
   position: absolute;
   top: 2px; 
-  right: 35px;
+  right: 6px;
   width: 20px;
   height: 20px;
 //   background: #f0f0f0;
   background: transparent;
   border: none;
   border-radius: 50%;
-  font-weight: bold;
+//   font-weight: bold;
   color: #333;
   font-size: 24px;
   cursor: pointer;
