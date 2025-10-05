@@ -1,6 +1,7 @@
 import { use, useEffect, useState } from "react";
 import { ListFiles, SelectFile, ShowFile, ReadFile } from "./Fetcher"
 import { OptionsIcon } from "./Icons";
+import { Tooltip } from "./Layout";
 import styled from "styled-components";
 
 export const ListDocs = ({ docs, loading, open, setOpen, onSelectDoc }) => {
@@ -29,7 +30,7 @@ export const ListDocs = ({ docs, loading, open, setOpen, onSelectDoc }) => {
     //     await SelectFile({collection_name: doc});
     //     console.log("Selected :",doc)
     // }
-
+    const [hoveredIcon, setHoveredIcon] = useState(null);
     const [menuDoc, setMenuDoc] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [modalFileUrl, setModalFileUrl] = useState("")
@@ -82,8 +83,13 @@ export const ListDocs = ({ docs, loading, open, setOpen, onSelectDoc }) => {
 
     return(
         <>
-        <SideBarButton open={open} onClick = {() => setOpen(!open)}>
+     
+        <SideBarButton 
+            // title = {open ? "Collapse menu" : "Expand menu"} 
+            open={open} 
+            onClick = {() => setOpen(!open)}>
             &#9776;
+            <Tooltip>{open ? "Close menu" : "Expand menu"}</Tooltip>
         </SideBarButton>
 
         <FileList open={open}>
@@ -92,7 +98,23 @@ export const ListDocs = ({ docs, loading, open, setOpen, onSelectDoc }) => {
                     <Docs>Documents</Docs>
                     {docs.map((doc, ind) => (
                         <File key={ind} onClick={() => onSelectDoc(doc)}>
-                            <OptionsIcon className="options-icon" onClick= {e => handleIcon(e, doc)}/>
+                            
+                            <OptionsIcon className="options-icon" 
+                            onClick= {e => handleIcon(e, doc)}
+                            onMouseEnter={() => setHoveredIcon(doc)}
+                            onMouseLeave={() => setHoveredIcon(null)}
+                            >
+                            </OptionsIcon>
+
+                            <Tooltip style={{
+                                visibility: hoveredIcon == doc ? 'visible' : 'hidden',
+                                opacity: hoveredIcon == doc ? 1 : 0,
+                                transition: 'opacity 0.3s',
+                                marginLeft: '100px',
+                                marginTop: '5px',
+                            }}>
+                                Options
+                            </Tooltip>
                             {doc}
                             {menuDoc === doc && (
                                 <Menu className="menu">
@@ -146,6 +168,42 @@ export const ShowDoc = ({ collection_name }) => {
 }
 
 // export const 
+const SideBarButton = styled.div`
+    position: fixed;
+    top:20px;
+    left: ${({ open }) => (open ? "200px" : "20px")};
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 3000;
+    height: 30px;
+    width: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &:hover {
+        background-color: #f9f9f9;
+        transition: all 0.2s ease;
+        border-radius: 50%;
+    }
+    
+    &:hover > div {
+        visibility: visible;
+        opacity: 1;
+        transition: opacity 0.3s;
+    }
+`
+// const IconWrapper = styled.div`
+//   position: relative;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   z-index: 100;
+//   &:hover > div {
+//     visibility: visible;
+//     opacity: 1;
+//     transition: opacity 0.3s;
+//   }
+// `;
 
 const Menu = styled.div`
     position: absolute;
@@ -197,15 +255,6 @@ const Docs = styled.div`
     color:#8f8f8f;
 `;
 
-const SideBarButton = styled.div`
-    position: fixed;
-    top:20px;
-    left: ${({ open }) => (open ? "200px" : "20px")};
-    // left:20px;
-    font-size: 24px;
-    cursor: pointer;
-    z-index: 3000;
-`
 const File = styled.div`
     display: flex;
     position: relative;

@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { useState, useRef } from "react";
 import { uploadFile } from "./Fetcher";
+import { Tooltip } from "./Layout";
 
 export const FileUploader = ({onUpload}) => {
     const [uploadedFile, setFile] = useState(null);
@@ -31,6 +32,11 @@ export const FileUploader = ({onUpload}) => {
     return(
         <>
         <AddButton onClick={() => fileInputRef.current.click()}>
+            <Tooltip style={{
+                marginLeft: '3px',
+            }}>
+                Add File
+            </Tooltip>
         +
         </AddButton>
         <FileInput 
@@ -52,7 +58,13 @@ const AddButton = styled.button`
     color: #007bff;
     font-size: 22px;
     cursor: pointer;
-`
+
+    &:hover > div{
+        visibility: visible;
+        opacity: 1;
+        transition: opacity 0.3s;
+    }
+    `
 const FileInput = styled.input`
     display: none;
 `

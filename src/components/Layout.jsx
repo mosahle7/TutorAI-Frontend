@@ -91,11 +91,13 @@ export const Layout = () => {
         setQuery(event.target.value);
     };
 
+
+
     const handleSubmit = async () => {
         console.log('Submitted:', query);
         setConversation(prev => [...prev, {type: 'user', content: query}]);
         
-        const currentQuery = query; // Store query before clearing
+        const currentQuery = query; //  query before clearing
         setQuery('');
         setShiftEnterPressed(false);
 
@@ -112,7 +114,7 @@ export const Layout = () => {
         try {
             
             // const response = await getResponse(currentQuery);
-            const response = await fetch('http://localhost:8001/final', {
+            const response = await fetch('http://localhost:8001/agent_stream', {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: currentQuery
@@ -136,6 +138,33 @@ export const Layout = () => {
                 return newConv;
             });
         }
+
+        // const cleanText = accumulated_content
+        // .replace(/\n{2,}/g, '\n')  // Replace 2+ newlines with single newline
+        // .trim();
+        // setConversation(prev => {
+        //     const newConv = [...prev];
+        //     newConv[newConv.length - 1].content = cleanText;
+        //     return newConv;
+        // });
+
+        function cleanMarkdownText(text) {
+  let cleaned = text.trim();
+  // Replace 3+ consecutive newlines with exactly 2 (1 blank line)
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+  // Remove spaces at start/end of lines
+  cleaned = cleaned.replace(/[ \t]+\n/g, '\n');
+  cleaned = cleaned.replace(/\n[ \t]+/g, '\n');
+  return cleaned;
+}
+
+const finalClean = cleanMarkdownText(accumulated_content);
+setConversation(prev => {
+  const newConv = [...prev];
+  newConv[newConv.length - 1].content = finalClean;
+  return newConv;
+});
+
         }
 
         catch (error) {
@@ -161,10 +190,14 @@ export const Layout = () => {
             <ShowDoc collection_name={collection_name}/>
             <ListDocs docs={docs} loading={loadingDocs} open={open} setOpen={setOpen} onSelectDoc={handleSelectDoc}/>
             {conversation.length === 0 && (
-                <Intro $open={open}>
-                    {introText}
-                    {introText.length < "Do you have any doubts in your mind?".length &&(<BlinkingCursor>|</BlinkingCursor>)}
-                </Intro>
+                <>
+                <SelfIntro $open={open}>Hello, I am TutorAI</SelfIntro>
+
+                    <Intro $open={open}>
+                        {introText}
+                        {introText.length < "Do you have any doubts in your mind?".length && (<BlinkingCursor>|</BlinkingCursor>)}
+                    </Intro>
+                </>
             )}
 
             <ChatContainer $down={conversation.length > 0} $open={open}>
@@ -190,8 +223,12 @@ export const Layout = () => {
 
                 <SubmitIcon
                 disabled={!/\S/.test(query)}
-                onClick={handleSubmit}
-                > 
+                onClick={handleSubmit}>
+                <Tooltip style={{
+                    marginLeft: '3px',
+                }}>
+                    Submit
+                </Tooltip>
                     ➡️
                 </SubmitIcon>
                 </InputWrapper>
@@ -219,7 +256,56 @@ export const Layout = () => {
         </>
     )
 }
+
+export const Tooltip = styled.div`
+    visibility: hidden;
+    opacity: 0;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    font-size: 12px;
+    padding: 6px 6px;
+    margin-left: 25px;
+    margin-top: 15px;
+    position: absolute;
+    display: inline-block;
+    white-space: nowrap;
+    z-index: 100;
+    top: 75%; 
+    left: 50%;
+    transform: translateX(-50%);
+    transition: opacity 0.2s;
+    `
+const SelfIntro = styled.div`
+    font-family: 'Montserrat', 'Nunito', Arial, sans-serif;
+    text-align: center;
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    padding-left: ${props => props.$open ? '260px' : '0px'};
+    // padding-left: -30px;
+    color: #3260eaff;
+    font-weight: 540;
+    margin-top: 100px;
+    font-size: 30px;
+    transition: padding-left 0.3s ease;
+    animation: slideDown 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-60px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    }
+`
 const Intro = styled.div`
+    font-family: 'Montserrat', 'Nunito', Arial, sans-serif;
+    color: #555;
     position: fixed;
     top: 180px;
     left:50%;
@@ -284,6 +370,12 @@ const SubmitIcon = styled.button`
   background: transparent;
   cursor: pointer;
   font-size: 18px; /* adjust size */
+
+  &: hover > div {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.3s;
+  }
 `;
 
 const ConversationContainer = styled.div`
@@ -332,6 +424,16 @@ const BotResponse = styled.div`
     margin-right:auto;
     margin-left:280px;
     background: transparent;
-    color: #333
+    color: #333;
+
+    p {
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        margin-top: 0.5em !important;
+        margin-bottom: 0.5em !important;
+    }
 `
 

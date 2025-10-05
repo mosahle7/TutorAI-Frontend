@@ -1,5 +1,6 @@
+// import { Tooltip } from "./Layout";
 
-export const OptionsIcon = ({ size = 20, color = "#333", style ={}, ...props }) => (
+export const OptionsIcon = ({ size = 20, color = "#333", style ={}, children, ...props }) => (
   <svg
     width={size}
     height={size}
@@ -11,5 +12,6 @@ export const OptionsIcon = ({ size = 20, color = "#333", style ={}, ...props }) 
     <circle cx="10" cy="4" r="2" fill={color} />
     <circle cx="10" cy="10" r="2" fill={color} />
     <circle cx="10" cy="16" r="2" fill={color} />
+    {children}
   </svg>
 );
