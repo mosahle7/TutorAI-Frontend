@@ -5,18 +5,50 @@ import { FileUploader } from './FileUploader';
 import ReactMarkdown from 'react-markdown';
 import { ListFiles } from './Fetcher';
 import { ListDocs, ShowDoc } from './ListDocs';
+import { QGenerator } from './QGenerator';
 
 export const Layout = () => {
     const [query, setQuery] = useState('');
     const chatBoxRef = useRef(null);
     const [shiftEnterPressed, setShiftEnterPressed] = useState(false);
-    const isMultiline = query.split('\n').length > 1;
+    // const isMultiline = query.split('\n').length > 1;
+    const isMultiline = query.includes('\n') && query.trim() !== '';
+    const [clickedMode, setClickedMode] = useState(false);
+    const [mode, setMode] = useState('Doubt Solver');
     const [introText, setIntroText] = useState('');
     const [docs, setDocs] = useState([]);
     const [open, setOpen] = useState(false);
     const [loadingDocs, setLoadingDocs] = useState(true);
     const [conversation, setConversation] = useState([]);
     const [collection_name, setCollectionName] = useState("");
+
+    const handleModeClick = (e) => {
+        // e.stopPropagation();
+        setClickedMode(prev => !prev);
+    }
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if(
+                clickedMode &&
+                !e.target.closest('.mode-item') &&
+                !e.target.closest('.mode')
+            ) {
+                setClickedMode(false);
+            }
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+    }, [clickedMode]);
+
+    const handleSelectMode = (selectedMode) => {
+        setMode(selectedMode);
+        setClickedMode(false);
+        console.log("Selected Mode: ", selectedMode);
+    };
 
     const fetchDocs = async () => {
         try {
@@ -63,34 +95,77 @@ export const Layout = () => {
     }
 }, [conversation.length]);
 
+//     useEffect(() => {
+//         if (chatBoxRef.current) {
+//             if (isMultiline) {
+//             chatBoxRef.current.style.height = 'auto';
+//             chatBoxRef.current.style.height = chatBoxRef.current.scrollHeight + 'px';
+//         } else {
+//             chatBoxRef.current.style.height = '40px';
+//         }
+        
+//         if (query === '') {
+//             chatBoxRef.current.style.height = '40px';
+//             setTimeout(() => {
+//                 if (chatBoxRef.current) {
+//                     chatBoxRef.current.scrollTop = 0;
+//                     chatBoxRef.current.focus();
+//                     chatBoxRef.current.setSelectionRange(0, 0);
+//                     chatBoxRef.current.style.height = '40px';
+//                 }
+//             }, 0);
+//         }
+//     }
+// }, [query, isMultiline]);
+
     useEffect(() => {
-        if (chatBoxRef.current) {
-            if (isMultiline) {
+         if (!chatBoxRef.current) return;
+
+        // If empty or only whitespace/newlines → collapse
+        if (query.trim() === '') {
+            chatBoxRef.current.style.height = '40px';
+            return;
+        }
+
+        if (isMultiline) {
             chatBoxRef.current.style.height = 'auto';
             chatBoxRef.current.style.height = chatBoxRef.current.scrollHeight + 'px';
         } else {
             chatBoxRef.current.style.height = '40px';
         }
-        
-        if (query === '') {
-            chatBoxRef.current.style.height = '40px';
-            setTimeout(() => {
-                if (chatBoxRef.current) {
-                    chatBoxRef.current.scrollTop = 0;
-                    chatBoxRef.current.focus();
-                    chatBoxRef.current.setSelectionRange(0, 0);
-                    chatBoxRef.current.style.height = '40px';
-                }
-            }, 0);
-        }
-    }
-}, [query, isMultiline]);
+    }, [query, isMultiline]);
 
+    useEffect(() => {
+        if (!chatBoxRef.current) return;
+
+        // If empty or only whitespace/newlines → collapse
+        if (query.trim() === '') {
+            chatBoxRef.current.style.height = '40px';
+            return;
+        }
+
+        if (isMultiline) {
+            chatBoxRef.current.style.height = 'auto';
+            chatBoxRef.current.style.height = chatBoxRef.current.scrollHeight + 'px';
+        } else {
+            chatBoxRef.current.style.height = '40px';
+        }
+    }, [query, isMultiline]);
+
+// Reset on mode change (when returning to Doubt Solver)
+    useEffect(() => {
+        if (mode === 'Doubt Solver' && chatBoxRef.current) {
+            // If first chat (no conversation) keep it collapsed
+            if (conversation.length === 0) {
+                setQuery('');            // ensure no hidden newline
+                chatBoxRef.current.style.height = '40px';
+            }
+        }
+    }, [mode, conversation.length]);
 
     const handleInputChange = (event) => {
         setQuery(event.target.value);
     };
-
 
 
     const handleSubmit = async () => {
@@ -187,8 +262,35 @@ setConversation(prev => {
             <main>
                 
             </main>
+            <HeaderBar>
+            <Mode className="mode"onClick={handleModeClick}>
+                {mode}
+                <Caret>
+                <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+                <path d="M4 7L9 12L14 7" stroke="#3366FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                </Caret>
+            </Mode>
+
+            {clickedMode && (
+            <ModeContents>
+                <div className='mode-item' onClick={() => handleSelectMode('Doubt Solver')}>
+                    <span className="title">Doubt Solver</span>
+                    <span className='subtitle'>Get answers from docs</span>
+            </div>
+                <div className='mode-item' onClick={() => handleSelectMode('Question Generator')}>
+                    <span className="title">Question Generator</span>
+                    <span className='subtitle'>Get questions from docs</span>
+            </div>
+            </ModeContents>
+            )}
+
             <ShowDoc collection_name={collection_name}/>
+            </HeaderBar>
             <ListDocs docs={docs} loading={loadingDocs} open={open} setOpen={setOpen} onSelectDoc={handleSelectDoc}/>
+
+            {mode === "Doubt Solver" ? (
+                <>
             {conversation.length === 0 && (
                 <>
                 <SelfIntro $open={open}>Hello, I am TutorAI</SelfIntro>
@@ -199,7 +301,7 @@ setConversation(prev => {
                     </Intro>
                 </>
             )}
-
+            
             <ChatContainer $down={conversation.length > 0} $open={open}>
                 <InputWrapper>
                 <ChatBox
@@ -252,11 +354,82 @@ setConversation(prev => {
                 </>
 
             )}
+            </>
+            ) : (
+                <QGenerator open={open}/>
+            )
+        }
 
         </>
     )
 }
+const HeaderBar = styled.div`
+    display: flex;
+    align-items: center;
+    top: 18px;
+    left: 50px;
+    position: fixed;
+    gap: 32px;
+    z-index: 2000;
+`
+export const Mode = styled.div`
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 5px 14px;
+    user-select: none;
+    &:hover{
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+    }
+    &:active {
+    background: #e3e8f1;
+  }
+`
 
+const ModeContents = styled.div`
+    position: absolute;
+    top: 25px;
+    left: 0px;
+    background: #e3e8f1;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 10px 8px;
+    text-align: left;
+    .mode-item{
+        padding: 8px 10px;
+        font-size: 15px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        border-radius: 10px;
+        transition: background .2s;
+        user-select: none;
+    }
+    .mode-item:hover
+    {
+        background: #f9f9f9;
+    }
+    
+    .title{
+
+    }
+
+    .subtitle{
+        margin-top: 4px;
+        font-size: 13px;
+        color:#6d7380; 
+    }
+`
+export const Caret = styled.span`
+    display: inline-flex;
+    margin-left: 3px;
+    svg { display: block; }
+
+`
 export const Tooltip = styled.div`
     visibility: hidden;
     opacity: 0;

@@ -50,6 +50,22 @@ export const uploadFile = async (file) => {
     }
 }
 
+export const generateQuestions = async ({topic, num_questions}) => {
+    try{
+        const response = await axios.post('http://localhost:8001/gen_questions', {
+            topic: topic,
+            num_questions: Number(num_questions)
+        });
+        console.log("Questions generated: ", response.data);
+        return response.data;
+    }
+
+    catch(error){
+        console.error("Error generating questions: ", error);
+        throw error;
+    }
+}
+
 export const ListFiles = async () =>{
     try{
         const response = await axios.get('http://localhost:8001/list_docs');

@@ -170,7 +170,7 @@ export const ShowDoc = ({ collection_name }) => {
 // export const 
 const SideBarButton = styled.div`
     position: fixed;
-    top:20px;
+    top:15px;
     left: ${({ open }) => (open ? "200px" : "20px")};
     font-size: 20px;
     cursor: pointer;
@@ -225,9 +225,6 @@ const Menu = styled.div`
 `
 
 const Show = styled.div`
-    position: fixed;
-    margin-top: -10px;
-    margin-left: 30px;
     // z-index: 5000;
 `
 const FileList = styled.div`
