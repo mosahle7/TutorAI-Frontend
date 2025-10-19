@@ -315,6 +315,7 @@ setConversation(prev => {
                     }
 
                     if (e.key === 'Enter' && /\S/.test(query)) {
+                        e.preventDefault(); // Prevents the default action of Enter key
                         handleSubmit();
                     }
 
@@ -543,7 +544,8 @@ const SubmitIcon = styled.button`
   background: transparent;
   cursor: pointer;
   font-size: 18px; /* adjust size */
-
+  font-weight: 600;
+  
   &: hover > div {
     visibility: visible;
     opacity: 1;
@@ -551,7 +553,7 @@ const SubmitIcon = styled.button`
   }
 `;
 
-const ConversationContainer = styled.div`
+export const ConversationContainer = styled.div`
     position: fixed;
     top: 60px;
     // right: 40px;
@@ -570,7 +572,7 @@ const ConversationContainer = styled.div`
     transition: left 0.3s ease;
 `
 
-const UserMessage = styled.div`
+export const UserMessage = styled.div`
     text-align: right;
     background: #f1f1f1;
     color: #333;
@@ -588,7 +590,7 @@ const UserMessage = styled.div`
     white-space: pre-wrap;
 `
 
-const BotResponse = styled.div`
+export const BotResponse = styled.div`
     text-align: left;
     max-width:60%;
     margin-top: 60px;

@@ -1,13 +1,16 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { generateQuestions } from "./Fetcher";
 import styled from "styled-components";
+import { ConversationContainer, UserMessage, BotResponse, Tooltip } from "./Layout";
 
 export const QGenerator = ({ open }) => {
     const [topic, setTopic] = useState("");
     const [number, setNumber] = useState("");
     const [questions, setQuestions] = useState("");
     const [introText, setIntroText] = useState('');
-    
+    const [conversation, setConversation] = useState([]);
+    const numberInputRef = useRef(null);
+    const topicInputRef = useRef(null);
 
     const handleTopicChange = (e) => {
         setTopic(e.target.value);
@@ -21,9 +24,30 @@ export const QGenerator = ({ open }) => {
 
     const handleSubmit = async (e) => {
         console.log("Submitted with topic: ", topic, " and number: ", number)
+
+        let content;
+
+        if(number==='1'){
+            console.log("I AMM")
+            content = number + " question on " + topic
+        }
+        else{
+            content = number + " questions on " + topic
+
+        }
+
+        setConversation(prev => [...prev, {type:'user', content: content}])
+        
+        const currentTopic = topic;
+        const currentNumber = number;
+
+        setTopic("");
+        setNumber("");
+
         try{
-            const questions = await generateQuestions({topic: topic, num_questions: Number(number)});
+            const questions = await generateQuestions({topic: currentTopic, num_questions: Number(currentNumber)});
             console.log("Generated questions: ", questions);
+            setConversation(prev => [...prev, {type: 'bot', content: questions}])
             setQuestions(questions);
         }
 
@@ -31,8 +55,7 @@ export const QGenerator = ({ open }) => {
             console.error("Error generating questions: ", error);
         }
 
-        setTopic("");
-        setNumber("");
+        
     }
 
     useEffect(() => {
@@ -56,15 +79,32 @@ export const QGenerator = ({ open }) => {
 
     return (
         <>
+        {conversation.length === 0 &&(
+        <>
         <SelfIntro $open={open}>Hello, I am TutorAI</SelfIntro>
-
         <Intro $open={open}>
             {introText}
             {introText.length < "Let's generate Questions!".length && (<BlinkingCursor>|</BlinkingCursor>)}
         </Intro>
+        </>
+        )}
         
-        <InputWrapper $open={open}>
+        <InputWrapper 
+        $down={conversation.length > 0} 
+        $open={open}
+        onKeyDown={(e) => {
+            if(e.key === 'Enter'){
+                if (document.activeElement === numberInputRef.current) {
+                    e.preventDefault(); // Prevents the default action of Enter key
+                    topicInputRef.current.focus();
+                } else if (topic && number){
+                    e.preventDefault(); // Prevents the default action of Enter key
+                    handleSubmit();
+                }
+            }
+        }}>
          <NumberInput
+        ref ={numberInputRef}
         type="number"
         min={1}
         max={20}
@@ -74,21 +114,48 @@ export const QGenerator = ({ open }) => {
         />
         <span>Questions on</span>
         <TopicInput
+        ref={topicInputRef}
         placeholder="topic"
         value={topic}
         onChange={handleTopicChange}
         />
 
+        <SubmitBtn 
+        disabled={!topic || !number}
+        onClick={handleSubmit}>
+            <Tooltip style={{
+                    marginLeft: '3px',
+                    marginTop: '10px',
+            }}>
+                Submit
+            </Tooltip>
+            ➡️
+        </SubmitBtn>
        
         </InputWrapper>
 
-        <SubmitBtn onClick={handleSubmit}>
-            ➡️
-        </SubmitBtn>
+       
 
-        {questions && (
-            <div>{questions}</div>
+        {conversation.length>0 && (
+            <>
+            <ConversationContainer $open={open}>
+            {conversation.map((item, i) =>(
+                <div>
+                    {item.type === 'user' ? (
+                        <UserMessage>{item.content}</UserMessage>
+                    ):(
+                        <BotResponse>
+                            {item.content}
+                        </BotResponse>
+                    )}
+                </div>
+            ))}
+            </ConversationContainer>
+            </>
         )}
+        {/* {questions && (
+            <div>{questions}</div>
+        )} */}
         </>
     )
 }
@@ -146,7 +213,7 @@ const BlinkingCursor = styled.span`
 `;
 const InputWrapper = styled.div`
     position: fixed;
-    top: 250px;
+    top: ${props => props.$down ? '500px' : '250px'};;
     left: 50%;
     transform: translateX(-50%);
     padding-left: ${props => props.$open ? '260px' : '8px'};
@@ -181,14 +248,24 @@ const NumberInput = styled.input`
     text-align: center;
 `
 
-const SubmitBtn = styled.div`
+const SubmitBtn = styled.button`
     position: absolute;
+    font-size: 20px;
+    font-weight: 600;
     width: 70px;
-    margin-top: 270px;
-    margin-left: 550px;    
+    margin-top: 4px;
+    margin-left: 395px;    
     display: flex;
     justify-content: center;
     align-items: center;
+    border: none;
+    background: transparent;
     cursor: pointer;
     user-select: none;
+
+    &: hover > div{
+      visibility: visible;
+      opacity: 1;
+      transition: opacity 0.3s;
+    }
 `
