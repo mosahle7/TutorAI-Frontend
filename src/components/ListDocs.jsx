@@ -41,14 +41,14 @@ export const ListDocs = ({ docs, loading, open, setOpen, onSelectDoc }) => {
     };
 
     const handleView = (doc) => {
-        setModalFileUrl(`http://localhost:8001/read_docs/${doc}`);
+        setModalFileUrl(`http://34.23.99.20:8001/read_docs/${doc}`);
         setModalOpen(true);
         setMenuDoc(null);
     }
 
     const handleDownload = (doc) => {
         const link = document.createElement('a');
-        link.href = `http://localhost:8001/download_docs/${doc}`;
+        link.href = `http://34.23.99.20:8001/download_docs/${doc}`;
         link.download = doc;
         document.body.appendChild(link);
         link.click();
