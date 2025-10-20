@@ -2,7 +2,7 @@ import axios from "axios";
 
 export const getResponse = async (query) => {
     try{
-        const response = await fetch('http://34.23.99.20:8001/final',{
+        const response = await fetch('https://34.23.99.20:8001/final',{
             method: 'POST',
             headers: {
                 'Content-Type': 'text/plain'
@@ -36,7 +36,7 @@ export const uploadFile = async (file) => {
         const formdata = new FormData();
         formdata.append('file', file);
 
-        const response = await fetch('http://34.23.99.20:8001/upload', {
+        const response = await fetch('https://34.23.99.20:8001/upload', {
             method: 'POST',
             body: formdata,
         });
@@ -52,7 +52,7 @@ export const uploadFile = async (file) => {
 
 export const generateQuestions = async ({topic, num_questions}) => {
     try{
-        const response = await axios.post('http://34.23.99.20:8001/gen_questions', {
+        const response = await axios.post('https://34.23.99.20:8001/gen_questions', {
             topic: topic,
             num_questions: Number(num_questions)
         });
@@ -68,7 +68,7 @@ export const generateQuestions = async ({topic, num_questions}) => {
 
 export const ListFiles = async () =>{
     try{
-        const response = await axios.get('http://34.23.99.20:8001/list_docs');
+        const response = await axios.get('https://34.23.99.20:8001/list_docs');
         return response.data;
     }
 
@@ -80,7 +80,7 @@ export const ListFiles = async () =>{
 
 export const SelectFile = async ({collection_name}) => {
     try{
-        const response = await axios.get('http://34.23.99.20:8001/select_collection', {
+        const response = await axios.get('https://34.23.99.20:8001/select_collection', {
             params: {collection_name: collection_name}
         });
         return response.data;
@@ -93,7 +93,7 @@ export const SelectFile = async ({collection_name}) => {
 
 export const ShowFile = async () => {
     try{
-        const response = await axios.get('http://34.23.99.20:8001/show_collection');
+        const response = await axios.get('https://34.23.99.20:8001/show_collection');
         return response.data;
     }
     catch(error){
@@ -104,7 +104,7 @@ export const ShowFile = async () => {
 
 export const ReadFile = async (filename) => {
     try{
-        const response = await axios.get(`http://34.23.99.20:8001/read_docs/${filename}`);
+        const response = await axios.get(`https://34.23.99.20:8001/read_docs/${filename}`);
         return response.data;
     }
     catch(error){
