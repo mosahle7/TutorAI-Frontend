@@ -41,14 +41,14 @@ export const ListDocs = ({ docs, loading, open, setOpen, onSelectDoc }) => {
     };
 
     const handleView = (doc) => {
-        setModalFileUrl(`https://34.23.99.20:8001/read_docs/${doc}`);
+        setModalFileUrl(`https://tutorai.ddns.net/api/read_docs/${doc}`);
         setModalOpen(true);
         setMenuDoc(null);
     }
 
     const handleDownload = (doc) => {
         const link = document.createElement('a');
-        link.href = `https://34.23.99.20:8001/download_docs/${doc}`;
+        link.href = `https://tutorai.ddns.net/api/download_docs/${doc}`;
         link.download = doc;
         document.body.appendChild(link);
         link.click();

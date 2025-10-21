@@ -189,7 +189,7 @@ export const Layout = () => {
         try {
             
             // const response = await getResponse(currentQuery);
-            const response = await fetch('https://34.23.99.20:8001/agent_stream', {
+            const response = await fetch('https://tutorai.ddns.net/api/agent_stream', {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: currentQuery
